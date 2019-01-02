@@ -82,6 +82,7 @@ if __name__ == '__main__':
     src = cv2.imread('./train/eli_walk3.png')
     canvas = src.copy()
     canvasNMS = src.copy()
+    canvas_all = np.zeros((src.shape[0], 2*src.shape[1], 3), dtype='uint8')
     boxes = [[  90,  45,  85, 150,   3],
              [  95,  50,  85, 150,   2],
              [  85,  38,  80, 145,   5]]
@@ -96,10 +97,10 @@ if __name__ == '__main__':
     for box in boxes:
         x, y, w, h = box[:4]
         cv2.rectangle(canvasNMS, (int(x), int(y)), (int(x+w), int(y+h)), (0, 255, 0), 2)
-  
-    cv2.imshow('canvas', canvas)
-    cv2.imshow('canvasNMS', canvasNMS)
-    # cv2.imwrite('./pedestrian_noNMS.jpg', canvas)
-    # cv2.imwrite('./pedestrian_NMS.jpg', canvasNMS)
+    
+    canvas_all[:src.shape[0], :src.shape[1]] = canvas
+    canvas_all[:src.shape[0], src.shape[1]:] = canvasNMS
+    cv2.imshow('canvas_all', canvas_all)
+    # cv2.imwrite('./pedestrian_NMS.jpg', canvas_all)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
