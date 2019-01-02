@@ -1,6 +1,5 @@
 import numpy as np
 import cv2
-np.set_printoptions(threshold = np.inf)
 import keras
 from keras.models import Sequential
 from keras.layers import Dense
@@ -8,45 +7,89 @@ from keras.layers import Dropout
 from keras.utils import np_utils
 from keras.datasets import mnist
 from keras import initializers
+import os
 
+def load_data():
+    path = './train/'
+    files = os.listdir(path)
+    images = []
+    labels = []
+    for f in files:
+        img_path = path + f
+        image = cv2.imread(img_path)
+        image = cv2.resize(image, (64,128))
+        # img = image.load_img(img_path, target_size=image_size)
+        # img_array = image.img_to_array(img)
+        images.append(image)
 
+        if 'm' in f:
+            labels.append(0)
+        else:
+            labels.append(1)
+
+    data = np.array(images)
+    labels = np.array(labels)
+
+    labels = np_utils.to_categorical(labels, 2)
+    return data, labels
+
+def load_test_data():
+    path = './test/'
+    files = os.listdir(path)
+    images = []
+    labels = []
+    for f in files:
+        img_path = path + f
+        image = cv2.imread(img_path)
+        image = cv2.resize(image, (64,128))
+        # img = image.load_img(img_path, target_size=image_size)
+        # img_array = image.img_to_array(img)
+        images.append(image)
+
+        if 'm' in f:
+            labels.append(0)
+        else:
+            labels.append(1)
+
+    data = np.array(images)
+    labels = np.array(labels)
+
+    labels = np_utils.to_categorical(labels, 2)
+    return data, labels
 
 if __name__ == '__main__':
-    # read image
-    filename = './digits.png'  
-    src = cv2.imread(filename, 0)
+
+    data, labels = load_data()
+    test_data, test_labels = load_test_data()
 
     batch_size = 200
-    epochs = 200
-    hidden_units = 400
-    trainList = []
-    testList  = []
+    epochs = 10
+    hidden_units = 3780
+
+    trainSetList = []
     trainLabelList = []
+    testSetList = []
     testLabelList = []
 
-    # split image
-    cells = [np.hsplit(row, 100) for row in np.vsplit(src, 50)]
+    HOGDescriptor = cv2.HOGDescriptor()
+    descriptorLen = HOGDescriptor.getDescriptorSize()
 
-    trainList = [ i[:50] for i in cells ]
-    testList  = [ i[50:] for i in cells ]
+    for label, imgs in enumerate(data):
+        descriptors = HOGDescriptor.compute(imgs)
+        trainSetList.append(descriptors.ravel())
+        trainLabelList.append(label)
+        pass
 
-    trainSet = np.array(trainList, np.float32)
-    testSet  = np.array(testList,  np.float32)
+    for label, imgs in enumerate(test_data):
+        descriptors = HOGDescriptor.compute(imgs)
+        testSetList.append(descriptors.ravel())
+        testLabelList.append(label)
+        pass
 
-    trainSet = trainSet.reshape(2500, 400) 
-    testSet  = testSet.reshape(2500,  400) 
-
-
-    trainSet_normalize = trainSet / 255
-    testSet_normalize = testSet / 255
-
-    # produce label
-    for i in range(10):
-        for j in range(250):
-            trainLabelList.append(i) 
-            testLabelList.append(i)
-    trainLabel = np.array(trainLabelList, np.float32)
-    testLabel = np.array(testLabelList, np.float32)
+    trainSet   = np.array(trainSetList, np.float32)
+    trainLabel = np.array(trainLabelList, np.int32)
+    testSet    = np.array(testSetList, np.float32)
+    testLabel  = np.array(testLabelList, np.int32)   
 
     train_OneHot = np_utils.to_categorical(trainLabel)
     test_OneHot = np_utils.to_categorical(testLabel)
@@ -55,7 +98,7 @@ if __name__ == '__main__':
 
     #將「輸入層」與「隱藏層1」加入模型
     model.add(Dense(units=hidden_units, 
-                    input_dim=400, 
+                    input_dim=descriptorLen, 
                     kernel_initializer='normal',
                     activation='relu'))
     #model.add(Dropout(0.5))
@@ -67,7 +110,7 @@ if __name__ == '__main__':
     #model.add(Dropout(0.5))
 
     #將「輸出層」加入模型
-    model.add(Dense(units=10, 
+    model.add(Dense(units=2, 
                     kernel_initializer='normal', 
                     activation='softmax'))
     print(model.summary())
@@ -76,14 +119,14 @@ if __name__ == '__main__':
     model.compile(loss='categorical_crossentropy', 
                   optimizer='Adam', metrics=['accuracy'])
 
-    train_history=model.fit(x=trainSet_normalize,
+    train_history=model.fit(x=trainSet,
                             y=train_OneHot,#validation_split=0.2, #0.2是把訓練資料20%作為驗證資料
                             epochs=epochs, batch_size=batch_size,verbose=2)   #執行30次訓練週期 每一批次200筆資料 verbose=2:顯示訓練過程
 
     #評估模型準確率                        
-    scores = model.evaluate(testSet_normalize, test_OneHot)
+    scores = model.evaluate(testSet, test_OneHot)
     print()
     print('accuracy=',scores[1])
 
-    # prediction=model.predict_classes(Xtest)
+    # prediction=model.predict_classes(testSet)
     # prediction 

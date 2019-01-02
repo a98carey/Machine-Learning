@@ -79,42 +79,27 @@ def suppress(boxes, overlapThresh=0.5):
 
 if __name__ == '__main__':
     import cv2
-
-    boxes = [[ 14,  79,  71, 261,   9],
-             [ 11,  42,  74, 304,   3],
-             [  8,   0,  14,  73,   1],
-             [ 16,  98,  65, 237,  11],
-             [137,   0,  30,  64,   2],
-             [114, 309,  57, 113,   4],
-             [111, 308,  73, 105,   3],
-             [ 15,  72,  71, 269,   7],
-             [ 13,  49,  72, 294,   4],
-             [116, 309,  41, 123,   5],
-             [ 16,  59,  70, 284,   5],
-             [ 15,  65,  71, 277,   6],
-             [137,   0,  32,  54,   1],
-             [ 14,  75,  71, 266,   8],      
-             [  0,  34, 187, 360,   1],
-             [ 13,  83,  71, 256,  10],
-             [  9,  38, 178, 365,   2]]
+    src = cv2.imread('./train/eli_walk3.png')
+    canvas = src.copy()
+    canvasNMS = src.copy()
+    boxes = [[  90,  45,  85, 150,   3],
+             [  95,  50,  85, 150,   2],
+             [  85,  38,  80, 145,   5]]
 
     boxes = np.asarray(boxes, dtype=np.int32)
-
-    canvas = np.zeros((375, 188, 3), dtype='uint8')
     
     for box in boxes:
         x, y, w, h = box[:4]
         cv2.rectangle(canvas, (int(x), int(y)), (int(x+w), int(y+h)), (0, 255, 0), 2)
 
-
-    canvasNMS = np.zeros((375, 188, 3), dtype='uint8')
     boxes = suppress(boxes)
-
     for box in boxes:
         x, y, w, h = box[:4]
-        cv2.rectangle(canvasNMS, (int(x), int(y)), (int(x+w), int(y+h)), (255, 0, 0), 2)
-
-    cv2.imshow('canvasNMS', canvasNMS)    
+        cv2.rectangle(canvasNMS, (int(x), int(y)), (int(x+w), int(y+h)), (0, 255, 0), 2)
+  
     cv2.imshow('canvas', canvas)
+    cv2.imshow('canvasNMS', canvasNMS)
+    # cv2.imwrite('./pedestrian_noNMS.jpg', canvas)
+    # cv2.imwrite('./pedestrian_NMS.jpg', canvasNMS)
     cv2.waitKey(0)
     cv2.destroyAllWindows()

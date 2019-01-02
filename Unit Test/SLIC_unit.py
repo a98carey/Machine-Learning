@@ -26,9 +26,15 @@ def SLIC(src ,n_segments, compactness):
 
 if __name__ == '__main__':
     src = cv2.imread('./eli_walk3.png')
+    clone1 = src.copy()
+    clone2 = src.copy()
+    clone3 = src.copy()
+    dst1 = SLIC(clone1, n_segments=300, compactness=10)
+    dst2 = SLIC(clone2, n_segments=300, compactness=20)
+    dst3 = SLIC(clone3, n_segments=300, compactness=5)
 
-    dst = SLIC(src, n_segments=300, compactness=10)
-
-    cv2.imshow('dst', cv2.pyrUp(dst))
+    cv2.imshow('dst1', cv2.pyrUp(dst1))
+    cv2.imshow('dst2', cv2.pyrUp(dst2))
+    cv2.imshow('dst3', cv2.pyrUp(dst3))
     cv2.waitKey(0)
     cv2.destroyAllWindows()
